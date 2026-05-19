@@ -12,10 +12,25 @@ from telegram.error import TelegramError
 logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN  = "8806116529:AAEpsOfVElNn0BoAKF2k4WkvFsxY_ecOPBs"
-CREATOR_ID  = 8547898258
-ALLOWED_CHAT = -1003996705724
-DATA_FILE  = "data/db.json"
+def require_env(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value:
+        raise RuntimeError(f"Environment variable {name} is required")
+    return value
+
+
+def require_env_int(name: str) -> int:
+    raw_value = require_env(name)
+    try:
+        return int(raw_value)
+    except ValueError as exc:
+        raise RuntimeError(f"Environment variable {name} must be an integer") from exc
+
+
+BOT_TOKEN = require_env("BOT_TOKEN")
+CREATOR_ID = require_env_int("CREATOR_ID")
+ALLOWED_CHAT = require_env_int("ALLOWED_CHAT")
+DATA_FILE = os.getenv("DATA_FILE", "data/db.json")
 
 RANK_TITLE = {5:"Создатель",4:"Старший администратор",3:"Администратор",2:"Старший модератор",1:"Модератор"}
 RANK_STARS = {5:"⭐⭐⭐⭐⭐",4:"⭐⭐⭐⭐",3:"⭐⭐⭐",2:"⭐⭐",1:"⭐"}
@@ -45,7 +60,9 @@ def load_db():
     }
 
 def save_db(db):
-    os.makedirs("data", exist_ok=True)
+    data_dir = os.path.dirname(DATA_FILE)
+    if data_dir:
+        os.makedirs(data_dir, exist_ok=True)
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(db, f, ensure_ascii=False, indent=2)
 

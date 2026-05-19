@@ -1,0 +1,22 @@
+services:
+  bot:
+    image: ${IMAGE_NAME:?set IMAGE_NAME in .env}:latest
+    container_name: iris-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: iris-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_CONFIG_DIR:-/root/.docker}:/config
+    command:
+      - --interval
+      - "${WATCHTOWER_POLL_INTERVAL:-60}"
+      - --cleanup
+      - iris-bot
